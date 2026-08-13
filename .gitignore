@@ -1,0 +1,9 @@
+# Build output
+build/
+zig-out/
+.zig-cache/
+zig-cache/
+
+# OS cruft
+Thumbs.db
+.DS_Store
