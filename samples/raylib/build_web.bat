@@ -9,7 +9,7 @@ rem     build_web.bat <raylib dir> <timbre include dir> <timbre archive>
 rem
 rem     <raylib dir>          an unpacked raylib webassembly release
 rem     <timbre include dir>  the SDK folder holding timbre\timbre.h
-rem     <timbre archive>      the SDK's timbre-emscripten.a
+rem     <timbre archive>      the SDK's timbre-wasm32-emscripten.a
 
 rem Expanded to full paths before the cd below, so relative paths stay
 rem relative to where the caller ran this from.
@@ -22,7 +22,7 @@ if "%TIMBRE_ARCHIVE%"=="" (
     echo.
     echo     ^<raylib dir^>          an unpacked raylib webassembly release
     echo     ^<timbre include dir^>  the SDK folder holding timbre\timbre.h
-    echo     ^<timbre archive^>      the SDK's timbre-emscripten.a
+    echo     ^<timbre archive^>      the SDK's timbre-wasm32-emscripten.a
     exit /b 1
 )
 
@@ -53,7 +53,7 @@ if not exist "%TIMBRE_INCLUDE%\timbre\timbre.h" (
 
 if not exist "%TIMBRE_ARCHIVE%" (
     echo build_web: "%TIMBRE_ARCHIVE%" is not there. Pass the path to
-    echo timbre-emscripten.a from a Timbre SDK or build.
+    echo timbre-wasm32-emscripten.a from a Timbre SDK or build.
     exit /b 1
 )
 

@@ -23,7 +23,7 @@ any engine with a push style audio API.
   from the [raylib releases](https://github.com/raysan5/raylib/releases)
   and unpack it. Its location is the first argument to `build_web.bat`.
 - The Timbre SDK. The build needs its include folder and
-  `bin\timbre-emscripten.a`, passed as the second and third arguments.
+  `bin\timbre-wasm32-emscripten.a`, passed as the second and third arguments.
 
 ## Assets
 
@@ -46,7 +46,7 @@ of a lowpass Biquad Resonant Filter on it.
 
 For example, against an unpacked SDK:
 
-    build_web.bat C:\raylib_webassembly C:\timbre-sdk\include C:\timbre-sdk\bin\timbre-emscripten.a
+    build_web.bat C:\raylib_webassembly C:\timbre-sdk\include C:\timbre-sdk\bin\timbre-wasm32-emscripten.a
 
 The output is `build\index.html` plus the wasm and JS beside it.
 Browsers refuse wasm from `file://`, so serve the folder:
