@@ -1,10 +1,11 @@
 // ======================================
 // Timbre - audio runtime
 // Copyright 2026 Madrigal Ltd.
+// Bindings released under the MIT license, see LICENSE in the repository root.
 // ======================================
 
-// Zig bindings over the Timbre C API, covering all of timbre.h. Link
-// the Timbre library from the SDK beside these.
+// Zig bindings over the Timbre C API. These bindings are not the official
+// authoritative API. That is timbre.h in the Timbre SDK.
 
 // The module name is the namespace, so the timbre prefix is stripped:
 // timbre.soundManagerCreate() here is timbreSoundManagerCreate() in C.

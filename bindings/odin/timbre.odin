@@ -1,10 +1,11 @@
 // ======================================
 // Timbre - audio runtime
 // Copyright 2026 Madrigal Ltd.
+// Bindings released under the MIT license, see LICENSE in the repository root.
 // ======================================
 
-// Odin bindings over the Timbre C API, covering all of timbre.h, which
-// stays the authority on every signature and value mirrored here.
+// Odin bindings over the Timbre C API. These bindings are not the official
+// authoritative API. That is timbre.h in the Timbre SDK.
 
 // The foreign imports expect the SDK libraries beside this file:
 // Timbre.lib on Windows, libTimbre.so on Linux, and for the web
