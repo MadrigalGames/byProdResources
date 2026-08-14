@@ -183,9 +183,10 @@ pub const soundManagerUpdate = timbreSoundManagerUpdate;
 // and reports an error once. Any frame count works, the chunking happens
 // inside.
 //
-// In host mixed mode this call is also the clock. The update measures its
-// delta time as the frames mixed since the previous update, so game time
-// and audio time cannot drift.
+// In host mixed mode this call is also the clock. Mixed frames are elapsed
+// time: mixing one second of audio advances events by one second, applied
+// at the next soundManagerUpdate(). So mix only what your audio output
+// actually plays, and event time stays in step with what you hear.
 pub const soundManagerMix = timbreSoundManagerMix;
 
 // How much of the world is running. Pauses and resumes the instances that
