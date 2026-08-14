@@ -248,12 +248,6 @@ pub const soundManagerSetSoundBankCallbacks = timbreSoundManagerSetSoundBankCall
 // one drops every bank it had.
 pub const soundManagerPreloadSoundBank = timbreSoundManagerPreloadSoundBank;
 
-// Only to be called from the Timbre editor.
-pub const previewSetSoundBank = timbrePreviewSetSoundBank;
-
-// Only to be called from the Timbre editor.
-pub const previewClearSoundBanks = timbrePreviewClearSoundBanks;
-
 // ======================================
 // Bulk audio.
 
@@ -529,10 +523,6 @@ extern fn timbreSoundManagerSetJobScheduler(soundManager: *SoundManager, schedul
 extern fn timbreSoundManagerSetSoundBankCallbacks(soundManager: *SoundManager, getFn: ?GetSoundBankDataFn, releaseFn: ?ReleaseSoundBankDataFn, user: ?*anyopaque) void;
 
 extern fn timbreSoundManagerPreloadSoundBank(soundManager: *SoundManager, name: [*:0]const u8) c_int;
-
-extern fn timbrePreviewSetSoundBank(soundManager: *SoundManager, name: [*:0]const u8, bytes: ?*const anyopaque, size: usize) c_int;
-
-extern fn timbrePreviewClearSoundBanks(soundManager: *SoundManager) void;
 
 extern fn timbreSoundManagerGetBulkAudioAsset(soundManager: *SoundManager, path: [*:0]const u8, outDuration: ?*f32, outAssetID: ?*u32) c_int;
 

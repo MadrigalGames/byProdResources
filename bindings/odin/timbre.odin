@@ -278,12 +278,6 @@ foreign lib {
 	// on success, zero when the host has no such bank. Call after loading a
 	// project: loading one drops every bank it had.
 	SoundManagerPreloadSoundBank :: proc(soundManager: ^SoundManager, name: cstring) -> b32 ---
-
-	// Only to be called from the Timbre editor.
-	PreviewSetSoundBank :: proc(soundManager: ^SoundManager, name: cstring, bytes: rawptr, size: uint) -> b32 ---
-
-	// Only to be called from the Timbre editor.
-	PreviewClearSoundBanks :: proc(soundManager: ^SoundManager) ---
 }
 
 // ======================================
