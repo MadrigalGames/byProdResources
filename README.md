@@ -1,2 +1,2 @@
-# Timbre Resources
-Bindings, samples and other assorted goodies for the Timbre interactive audio system.
+# byProd Resources
+Bindings, samples and other assorted goodies for the byProd interactive audio system.
