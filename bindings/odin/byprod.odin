@@ -1,51 +1,51 @@
 // ======================================
-// Timbre - audio runtime
+// byProd - audio runtime
 // Copyright 2026 Madrigal Ltd.
 // Bindings released under the MIT license, see LICENSE in the repository root.
 // ======================================
 
-// Odin bindings over the Timbre C API. These bindings are not the official
-// authoritative API. That is timbre.h in the Timbre SDK.
+// Odin bindings over the byProd C API. These bindings are not the official
+// authoritative API. That is byprod.h in the byProd SDK.
 
 // The foreign imports expect the SDK libraries beside this file:
-// Timbre.lib on Windows, libTimbre.so on Linux, and for the web
-// timbre-wasm32-wasi.a renamed to timbre-wasm32-wasi.o, since Odin's
+// byProd.lib on Windows, libbyProd.so on Linux, and for the web
+// byProd-wasm32-wasi.a renamed to byProd-wasm32-wasi.o, since Odin's
 // wasm target only hands .o files to its linker while wasm-ld
 // identifies inputs by content.
 
-// Threading: The public API of Timbre is supposed to be called from only
+// Threading: The public API of byProd is supposed to be called from only
 // one thread at a time. The library uses threads internally for mixing,
 // and can be hooked into a host-provided job system for async wave data
 // decoding. See SoundManagerSetJobScheduler() for more information. A
 // sound manager created with SOUND_MANAGER_HOST_MIXED runs no internal
 // threads at all. The host pulls the mixed audio with SoundManagerMix().
 
-package timbre
+package byprod
 
 when ODIN_OS == .Windows {
 	foreign import lib {
-		"Timbre.lib"
+		"byProd.lib"
 	}
 } else when ODIN_OS == .Linux {
 	foreign import lib {
-		"libTimbre.so"
+		"libbyProd.so"
 	}
 } else when ODIN_OS == .JS {
 	foreign import lib {
-		"timbre-wasm32-wasi.o"
+		"byProd-wasm32-wasi.o"
 	}
 }
 
 // ======================================
 // Library version.
 
-VERSION_MAJOR :: 2
-VERSION_MINOR :: 0
-VERSION_PATCH :: 1
+VERSION_MAJOR :: 0
+VERSION_MINOR :: 5
+VERSION_PATCH :: 0
 
 VERSION: u32 : (VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | VERSION_PATCH
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	// Returns the version the library was built as. Compare against VERSION
 	// from the bindings you compiled against before using anything else.
@@ -78,7 +78,7 @@ ScheduleJobFn :: proc "c" (jobFn: JobFn, jobData: rawptr, user: rawptr)
 // A function which waits until every scheduled job has run.
 WaitForJobsFn :: proc "c" (user: rawptr)
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	// Replaces the allocator, which has to happen before anything else is
 	// called. The callbacks must be thread safe since the audio mixer thread
@@ -134,7 +134,7 @@ TYPE_ANY_VALUE  :: 31
 TYPE_VECVARIANT :: 32
 TYPE_EXECUTION  :: 201
 
-// Timbre's block starts at 300 (= invalid) so the first real type is 301.
+// byProd's block starts at 300 (= invalid) so the first real type is 301.
 TYPE_WAVE_ASSET   :: 301
 TYPE_AUDIO_SOURCE :: 302
 TYPE_AUDIO_FILTER :: 303
@@ -142,7 +142,7 @@ TYPE_AUDIO_FILTER :: 303
 // ======================================
 // String hashing.
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	// MurmurHash3, x86 32 bit variant, seeded zero, over the bytes of the
 	// string without its trailing null. The x86 and x64 variants of
@@ -160,17 +160,17 @@ EventInstance    :: struct {}
 
 // Flags for SoundManagerCreate, combined bitwise.
 
-// Timbre positions 3D audio in a left-handed coordinate system by default.
+// byProd positions 3D audio in a left-handed coordinate system by default.
 // This flag switches the sound manager to a right-handed one.
 SOUND_MANAGER_RIGHT_HANDED_3D :: 0x1
 
-// Timbre opens no audio device and runs no thread of its own, and renders
+// byProd opens no audio device and runs no thread of its own, and renders
 // audio only when the host calls SoundManagerMix(). For hosts that own
 // their audio pipeline, eg. web games. Requires a real sample rate at
 // creation.
 SOUND_MANAGER_HOST_MIXED :: 0x2
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	// The sample rate is the mixing rate in Hz. If you are creating the
 	// sound manager with the SOUND_MANAGER_HOST_MIXED flag you should pass a
@@ -180,7 +180,7 @@ foreign lib {
 
 	SoundManagerDestroy :: proc(soundManager: ^SoundManager) ---
 
-	// Loads a built project from a .timbre file. The bytes are copied, so
+	// Loads a built project from a .byprod file. The bytes are copied, so
 	// the caller's buffer is not referenced afterwards. Returns nonzero on
 	// success.
 	SoundManagerLoadProject :: proc(soundManager: ^SoundManager, bytes: rawptr, size: uint) -> b32 ---
@@ -268,7 +268,7 @@ GetSoundBankDataFn :: proc "c" (name: cstring, out: ^SoundBankData, user: rawptr
 // straight after it has copied one it was told not to keep.
 ReleaseSoundBankDataFn :: proc "c" (name: cstring, data: ^SoundBankData, user: rawptr)
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	SoundManagerSetSoundBankCallbacks :: proc(soundManager: ^SoundManager, getFn: GetSoundBankDataFn, releaseFn: ReleaseSoundBankDataFn, user: rawptr) ---
 
@@ -296,7 +296,7 @@ BulkAudioAssetInfo :: struct {
 	duration: f32,
 }
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	// Fills whichever of the two outputs are given and returns nonzero. Zero
 	// means the project declares no such entry.
@@ -392,7 +392,7 @@ DebugInfo3D :: struct {
 	dopplerRatio: f32,
 }
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	SoundManagerGetDebugStats :: proc(soundManager: ^SoundManager, out: ^DebugStats) ---
 
@@ -417,7 +417,7 @@ foreign lib {
 
 GroupBus :: struct {}
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	// Master bus, always present, and the default.
 	// Its volume is the same one SoundManagerSetGlobalVolume sets.
@@ -436,7 +436,7 @@ foreign lib {
 
 INVALID_PARAMETER_INDEX :: 0xFFFFFFFF
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	EventDescriptionGetParameterIndex :: proc(description: ^EventDescription, name: cstring) -> u32 ---
 	EventDescriptionGetParameterCount :: proc(description: ^EventDescription) -> u32 ---
@@ -464,7 +464,7 @@ EventInstanceState :: enum i32 {
 	FINISHED = 3,
 }
 
-@(default_calling_convention="c", link_prefix="timbre")
+@(default_calling_convention="c", link_prefix="byprod")
 foreign lib {
 	EventInstanceStart   :: proc(instance: ^EventInstance) ---
 	EventInstanceStop    :: proc(instance: ^EventInstance) ---

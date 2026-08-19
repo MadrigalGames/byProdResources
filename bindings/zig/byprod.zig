@@ -1,19 +1,19 @@
 // ======================================
-// Timbre - audio runtime
+// byProd - audio runtime
 // Copyright 2026 Madrigal Ltd.
 // Bindings released under the MIT license, see LICENSE in the repository root.
 // ======================================
 
-// Zig bindings over the Timbre C API. These bindings are not the official
-// authoritative API. That is timbre.h in the Timbre SDK.
+// Zig bindings over the byProd C API. These bindings are not the official
+// authoritative API. That is byprod.h in the byProd SDK.
 
-// The module name is the namespace, so the timbre prefix is stripped:
-// timbre.soundManagerCreate() here is timbreSoundManagerCreate() in C.
+// The module name is the namespace, so the byprod prefix is stripped:
+// byprod.soundManagerCreate() here is bpdSoundManagerCreate() in C.
 // The public interface below is the whole API. The extern declarations
 // of the C symbol names and signatures can be found in their own section
 // at the bottom.
 
-// Threading: The public API of Timbre is supposed to be called from only
+// Threading: The public API of byProd is supposed to be called from only
 // one thread at a time. The library uses threads internally for mixing,
 // and can be hooked into a host-provided job system for async wave data
 // decoding. See soundManagerSetJobScheduler() for more information.
@@ -23,9 +23,9 @@
 // ======================================
 // Library version.
 
-pub const VERSION_MAJOR = 2;
-pub const VERSION_MINOR = 0;
-pub const VERSION_PATCH = 1;
+pub const VERSION_MAJOR = 0;
+pub const VERSION_MINOR = 5;
+pub const VERSION_PATCH = 0;
 
 pub fn makeVersion(major: u32, minor: u32, patch: u32) u32 {
     return (major << 16) | (minor << 8) | patch;
@@ -35,7 +35,7 @@ pub const VERSION: u32 = makeVersion(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH
 
 // Returns the version the library was built as. Compare against VERSION
 // from the bindings you compiled against before using anything else.
-pub const version = timbreVersion;
+pub const version = bpdVersion;
 
 // ======================================
 // Host hooks.
@@ -47,7 +47,7 @@ pub const FreeFn = *const fn (ptr: ?*anyopaque, user: ?*anyopaque) callconv(.c) 
 // Replaces the allocator, which has to happen before anything else is called.
 // The callbacks must be thread safe since the audio mixer thread allocates
 // through them too.
-pub const setAllocator = timbreSetAllocator;
+pub const setAllocator = bpdSetAllocator;
 
 // Non-exhaustive, so a print type added to the runtime later maps to the
 // else branch instead of being undefined behavior.
@@ -60,7 +60,7 @@ pub const PrintType = enum(c_int) {
 
 pub const PrintFn = *const fn (message: [*:0]const u8, printType: PrintType, user: ?*anyopaque) callconv(.c) void;
 
-pub const setPrint = timbreSetPrint;
+pub const setPrint = bpdSetPrint;
 
 pub const AssertFn = *const fn (message: [*:0]const u8, file: [*:0]const u8, line: c_int, user: ?*anyopaque) callconv(.c) void;
 
@@ -68,7 +68,7 @@ pub const AssertFn = *const fn (message: [*:0]const u8, file: [*:0]const u8, lin
 // message goes to the print hook and the process aborts. A handler that
 // returns instead of aborting makes the runtime continue past the failure
 // (usually with an early-out or another way to handle the error).
-pub const setAssertHandler = timbreSetAssertHandler;
+pub const setAssertHandler = bpdSetAssertHandler;
 
 // The work a scheduler is asked to run.
 pub const JobFn = *const fn (jobData: ?*anyopaque) callconv(.c) void;
@@ -119,7 +119,7 @@ pub const TYPE_ANY_VALUE: u32 = 31;
 pub const TYPE_VECVARIANT: u32 = 32;
 pub const TYPE_EXECUTION: u32 = 201;
 
-// Timbre's block starts at 300 (= invalid) so the first real type is 301.
+// byProd's block starts at 300 (= invalid) so the first real type is 301.
 pub const TYPE_WAVE_ASSET: u32 = 301;
 pub const TYPE_AUDIO_SOURCE: u32 = 302;
 pub const TYPE_AUDIO_FILTER: u32 = 303;
@@ -130,7 +130,7 @@ pub const TYPE_AUDIO_FILTER: u32 = 303;
 // MurmurHash3, x86 32 bit variant, seeded zero, over the bytes of the string
 // without its trailing null. The x86 and x64 variants of MurmurHash3 disagree,
 // so a host reimplementing this rather than calling it wants the x86 one.
-pub const hashString = timbreHashString;
+pub const hashString = bpdHashString;
 
 // ======================================
 // Sound manager.
@@ -141,11 +141,11 @@ pub const EventInstance = opaque {};
 
 // Flags for soundManagerCreate, combined bitwise.
 
-// Timbre positions 3D audio in a left-handed coordinate system by default.
+// byProd positions 3D audio in a left-handed coordinate system by default.
 // This flag switches the sound manager to a right-handed one.
 pub const SOUND_MANAGER_RIGHT_HANDED_3D: u32 = 0x1;
 
-// Timbre opens no audio device and runs no thread of its own, and renders
+// byProd opens no audio device and runs no thread of its own, and renders
 // audio only when the host calls soundManagerMix(). For hosts that own
 // their audio pipeline, eg. web games. Requires a real sample rate at creation.
 pub const SOUND_MANAGER_HOST_MIXED: u32 = 0x2;
@@ -153,13 +153,13 @@ pub const SOUND_MANAGER_HOST_MIXED: u32 = 0x2;
 // The sample rate is the mixing rate in Hz. If you are creating the sound
 // manager with the SOUND_MANAGER_HOST_MIXED flag you should pass a sample
 // rate, otherwise leave it at 0 which makes the audio device decide.
-pub const soundManagerCreate = timbreSoundManagerCreate;
+pub const soundManagerCreate = bpdSoundManagerCreate;
 
-pub const soundManagerDestroy = timbreSoundManagerDestroy;
+pub const soundManagerDestroy = bpdSoundManagerDestroy;
 
-// Loads a built project from a .timbre file. The bytes are copied, so the
+// Loads a built project from a .byprod file. The bytes are copied, so the
 // caller's buffer is not referenced afterwards. Returns nonzero on success.
-pub const soundManagerLoadProject = timbreSoundManagerLoadProject;
+pub const soundManagerLoadProject = bpdSoundManagerLoadProject;
 
 // Loads an additive project, adding its data to the already loaded main
 // project. The bytes are copied, as above. Refused, with nothing kept, when
@@ -169,14 +169,14 @@ pub const soundManagerLoadProject = timbreSoundManagerLoadProject;
 //
 // Writes the project's own ID, null-terminated, into outID. Needed because
 // the additive project's soundbanks are named "[projectID]bankName".
-pub const soundManagerLoadAdditiveProject = timbreSoundManagerLoadAdditiveProject;
+pub const soundManagerLoadAdditiveProject = bpdSoundManagerLoadAdditiveProject;
 
 // Looks an event up by its authored path, such as "event:/Music/MainMenu".
 // Null when the project has no such event.
-pub const soundManagerGetEventDescription = timbreSoundManagerGetEventDescription;
+pub const soundManagerGetEventDescription = bpdSoundManagerGetEventDescription;
 
 // Updates the sound mananger and advances every playing event instance.
-pub const soundManagerUpdate = timbreSoundManagerUpdate;
+pub const soundManagerUpdate = bpdSoundManagerUpdate;
 
 // Renders the next frameCount frames as interleaved stereo float samples,
 // so the buffer holds frameCount * 2 floats. Only for a sound manager
@@ -188,32 +188,32 @@ pub const soundManagerUpdate = timbreSoundManagerUpdate;
 // time: mixing one second of audio advances events by one second, applied
 // at the next soundManagerUpdate(). So mix only what your audio output
 // actually plays, and event time stays in step with what you hear.
-pub const soundManagerMix = timbreSoundManagerMix;
+pub const soundManagerMix = bpdSoundManagerMix;
 
 // How much of the world is running. Pauses and resumes the instances that
 // opted into following it, and leaves the rest playing. Full by default.
-pub const soundManagerSetTickLevel = timbreSoundManagerSetTickLevel;
+pub const soundManagerSetTickLevel = bpdSoundManagerSetTickLevel;
 
 // Scales everything, on top of each event's own volume. This is the master
 // bus, which is what a host means by a global volume. One by default.
-pub const soundManagerSetGlobalVolume = timbreSoundManagerSetGlobalVolume;
+pub const soundManagerSetGlobalVolume = bpdSoundManagerSetGlobalVolume;
 
-pub const soundManagerGetGlobalVolume = timbreSoundManagerGetGlobalVolume;
+pub const soundManagerGetGlobalVolume = bpdSoundManagerGetGlobalVolume;
 
 // Where the listener is and which way it faces, in world units. Forward and
 // up are the transform's Z and Y axes. Default: identity.
-pub const soundManagerSetListenerTransform = timbreSoundManagerSetListenerTransform;
+pub const soundManagerSetListenerTransform = bpdSoundManagerSetListenerTransform;
 
 // Roughly how loud one output channel is right now, for a meter. Only
 // meaningful on a sound manager created as RuntimeEnvironment.preview_in_editor,
 // which is the only one that measures it, since it costs mixing work a game
 // should not pay for. Zero otherwise.
-pub const soundManagerGetApproximateVolume = timbreSoundManagerGetApproximateVolume;
+pub const soundManagerGetApproximateVolume = bpdSoundManagerGetApproximateVolume;
 
 // Used to hook wave decoding jobs into the job system of a game engine, or
 // some other multithreading solution. Default: null, which means that the
 // decoding is done on the main thread.
-pub const soundManagerSetJobScheduler = timbreSoundManagerSetJobScheduler;
+pub const soundManagerSetJobScheduler = bpdSoundManagerSetJobScheduler;
 
 // ======================================
 // Sound banks.
@@ -239,14 +239,14 @@ pub const GetSoundBankDataFn = *const fn (name: [*:0]const u8, out: *SoundBankDa
 // straight after it has copied one it was told not to keep.
 pub const ReleaseSoundBankDataFn = *const fn (name: [*:0]const u8, data: *const SoundBankData, user: ?*anyopaque) callconv(.c) void;
 
-pub const soundManagerSetSoundBankCallbacks = timbreSoundManagerSetSoundBankCallbacks;
+pub const soundManagerSetSoundBankCallbacks = bpdSoundManagerSetSoundBankCallbacks;
 
 // Fetches a bank now and keeps it, instead of leaving it to arrive when the
 // first event that needs it plays. The bank stays resident until the project
 // is replaced or the sound manager is destroyed. Returns nonzero on success,
 // zero when the host has no such bank. Call after loading a project: loading
 // one drops every bank it had.
-pub const soundManagerPreloadSoundBank = timbreSoundManagerPreloadSoundBank;
+pub const soundManagerPreloadSoundBank = bpdSoundManagerPreloadSoundBank;
 
 // ======================================
 // Bulk audio.
@@ -257,9 +257,9 @@ pub const soundManagerPreloadSoundBank = timbreSoundManagerPreloadSoundBank;
 // Fills whichever of the two outputs are given and returns nonzero. Zero
 // means the project declares no such entry.
 
-pub const soundManagerGetBulkAudioAsset = timbreSoundManagerGetBulkAudioAsset;
+pub const soundManagerGetBulkAudioAsset = bpdSoundManagerGetBulkAudioAsset;
 
-pub const soundManagerGetBulkAudioAssetByHash = timbreSoundManagerGetBulkAudioAssetByHash;
+pub const soundManagerGetBulkAudioAssetByHash = bpdSoundManagerGetBulkAudioAssetByHash;
 
 pub const BulkAudioAssetInfo = extern struct {
     // Borrowed from the loaded project, never null, and valid only until the
@@ -272,10 +272,10 @@ pub const BulkAudioAssetInfo = extern struct {
 };
 
 // How many entries every loaded project declares between them, which is what to size a buffer by.
-pub const soundManagerGetBulkAudioAssetCount = timbreSoundManagerGetBulkAudioAssetCount;
+pub const soundManagerGetBulkAudioAssetCount = bpdSoundManagerGetBulkAudioAssetCount;
 
 // Fills up to maxCount entries and returns how many were written.
-pub const soundManagerGetBulkAudioAssets = timbreSoundManagerGetBulkAudioAssets;
+pub const soundManagerGetBulkAudioAssets = bpdSoundManagerGetBulkAudioAssets;
 
 // ======================================
 // Debug statistics.
@@ -308,10 +308,10 @@ pub const DebugStats = extern struct {
     peakInFlightDecodes: u32,
 };
 
-pub const soundManagerGetDebugStats = timbreSoundManagerGetDebugStats;
+pub const soundManagerGetDebugStats = bpdSoundManagerGetDebugStats;
 
 // Zeroes the running totals.
-pub const soundManagerResetDebugStats = timbreSoundManagerResetDebugStats;
+pub const soundManagerResetDebugStats = bpdSoundManagerResetDebugStats;
 
 pub const DecodeRecord = extern struct {
     assetID: u32,
@@ -333,9 +333,9 @@ pub const InFlightDecode = extern struct {
 };
 
 // Both fill up to maxCount entries and return how many were written.
-pub const soundManagerGetRecentDecodes = timbreSoundManagerGetRecentDecodes;
+pub const soundManagerGetRecentDecodes = bpdSoundManagerGetRecentDecodes;
 
-pub const soundManagerGetInFlightDecodes = timbreSoundManagerGetInFlightDecodes;
+pub const soundManagerGetInFlightDecodes = bpdSoundManagerGetInFlightDecodes;
 
 // The listener as the mixer currently sees it.
 pub const ListenerDebugInfo = extern struct {
@@ -344,12 +344,12 @@ pub const ListenerDebugInfo = extern struct {
     speed: f32,
 };
 
-pub const soundManagerGetListenerDebugInfo = timbreSoundManagerGetListenerDebugInfo;
+pub const soundManagerGetListenerDebugInfo = bpdSoundManagerGetListenerDebugInfo;
 
 // One 3D event instance's spatial debug view, computed with the same formula
 // as the mixer. The radial speeds are the projections on the listener-to-source
 // line. Both positive and equal means source and listener co-moving, which is
-// a ratio of one. Timbre3DDebugInfo in C, renamed here since a Zig identifier
+// a ratio of one. Bpd3DDebugInfo in C, renamed here since a Zig identifier
 // cannot start with a digit.
 pub const DebugInfo3D = extern struct {
     eventPath: [128]u8,
@@ -373,7 +373,7 @@ pub const DebugInfo3D = extern struct {
 
 // Fills up to maxCount entries, one per registered 3D event instance, and
 // returns how many were written.
-pub const soundManagerGet3DDebugInfo = timbreSoundManagerGet3DDebugInfo;
+pub const soundManagerGet3DDebugInfo = bpdSoundManagerGet3DDebugInfo;
 
 // ======================================
 // Group buses.
@@ -384,33 +384,33 @@ pub const GroupBus = opaque {};
 
 // Master bus, always present, and the default.
 // Its volume is the same one soundManagerSetGlobalVolume sets.
-pub const soundManagerGetMasterGroupBus = timbreSoundManagerGetMasterGroupBus;
+pub const soundManagerGetMasterGroupBus = bpdSoundManagerGetMasterGroupBus;
 
 // By authored path, such as "groupbus:/Buses/Music".
 // Null when the project declares no such bus.
-pub const soundManagerGetGroupBus = timbreSoundManagerGetGroupBus;
+pub const soundManagerGetGroupBus = bpdSoundManagerGetGroupBus;
 
-pub const groupBusGetVolume = timbreGroupBusGetVolume;
+pub const groupBusGetVolume = bpdGroupBusGetVolume;
 
-pub const groupBusSetVolume = timbreGroupBusSetVolume;
+pub const groupBusSetVolume = bpdGroupBusSetVolume;
 
 // ======================================
 // Event descriptions.
 
 pub const INVALID_PARAMETER_INDEX: u32 = 0xFFFFFFFF;
 
-pub const eventDescriptionGetParameterIndex = timbreEventDescriptionGetParameterIndex;
+pub const eventDescriptionGetParameterIndex = bpdEventDescriptionGetParameterIndex;
 
-pub const eventDescriptionGetParameterCount = timbreEventDescriptionGetParameterCount;
+pub const eventDescriptionGetParameterCount = bpdEventDescriptionGetParameterCount;
 
 // One of the TYPE values, or invalid for a bad index.
-pub const eventDescriptionGetParameterType = timbreEventDescriptionGetParameterType;
+pub const eventDescriptionGetParameterType = bpdEventDescriptionGetParameterType;
 
 // Seconds, negative when the event's length was never determined.
-pub const eventDescriptionGetLength = timbreEventDescriptionGetLength;
+pub const eventDescriptionGetLength = bpdEventDescriptionGetLength;
 
 // Null when the graph could not be built, which is reported through the print hook.
-pub const eventDescriptionCreateInstance = timbreEventDescriptionCreateInstance;
+pub const eventDescriptionCreateInstance = bpdEventDescriptionCreateInstance;
 
 // ======================================
 // Event instances.
@@ -426,174 +426,174 @@ pub const EventInstanceState = enum(c_int) {
     _,
 };
 
-pub const eventInstanceStart = timbreEventInstanceStart;
-pub const eventInstanceStop = timbreEventInstanceStop;
-pub const eventInstancePause = timbreEventInstancePause;
-pub const eventInstanceUnpause = timbreEventInstanceUnpause;
+pub const eventInstanceStart = bpdEventInstanceStart;
+pub const eventInstanceStop = bpdEventInstanceStop;
+pub const eventInstancePause = bpdEventInstancePause;
+pub const eventInstanceUnpause = bpdEventInstanceUnpause;
 
 // Hands the instance back to the sound manager, which destroys it. The
 // handle is dead afterwards.
-pub const eventInstanceRelease = timbreEventInstanceRelease;
+pub const eventInstanceRelease = bpdEventInstanceRelease;
 
 // Hands it back on its own, the next update after it finishes. For a sound
 // started and then forgotten about, where there is nobody left to release
 // it. The handle is dead from that point.
-pub const eventInstanceReleaseWhenFinished = timbreEventInstanceReleaseWhenFinished;
+pub const eventInstanceReleaseWhenFinished = bpdEventInstanceReleaseWhenFinished;
 
 // Ramps the instance up from silence over the duration in seconds. Ignored
 // while another fade is already running. Scales on top of the volume
 // multiplier rather than replacing it, so a host can set both.
-pub const eventInstanceFadeIn = timbreEventInstanceFadeIn;
+pub const eventInstanceFadeIn = bpdEventInstanceFadeIn;
 
 // Ramps down to silence over the duration in seconds and then hands the
 // instance back, as releaseWhenFinished does. Asking twice does not restart
 // the fade. An instance that stops or finishes partway through is released
 // there and then. The handle is dead once the fade completes.
-pub const eventInstanceReleaseAfterFadeOut = timbreEventInstanceReleaseAfterFadeOut;
+pub const eventInstanceReleaseAfterFadeOut = bpdEventInstanceReleaseAfterFadeOut;
 
-pub const eventInstanceGetState = timbreEventInstanceGetState;
+pub const eventInstanceGetState = bpdEventInstanceGetState;
 
 // Seconds since the instance started, which is what an Event Time node
 // reads and what a preview displays.
-pub const eventInstanceGetTime = timbreEventInstanceGetTime;
+pub const eventInstanceGetTime = bpdEventInstanceGetTime;
 
 // Float/int parameters are clamped to the range the parameter was authored with.
-pub const eventInstanceSetParameterByIndex = timbreEventInstanceSetParameterByIndex;
+pub const eventInstanceSetParameterByIndex = bpdEventInstanceSetParameterByIndex;
 
-pub const eventInstanceSetParameterByName = timbreEventInstanceSetParameterByName;
+pub const eventInstanceSetParameterByName = bpdEventInstanceSetParameterByName;
 
-pub const eventInstanceGetParameterByIndex = timbreEventInstanceGetParameterByIndex;
+pub const eventInstanceGetParameterByIndex = bpdEventInstanceGetParameterByIndex;
 
-pub const eventInstanceSendSignal = timbreEventInstanceSendSignal;
+pub const eventInstanceSendSignal = bpdEventInstanceSendSignal;
 
 // Scales everything this instance plays, on top of the event's own volume
 // and whatever its graph asks for. One by default.
-pub const eventInstanceSetVolumeMultiplier = timbreEventInstanceSetVolumeMultiplier;
+pub const eventInstanceSetVolumeMultiplier = bpdEventInstanceSetVolumeMultiplier;
 
-pub const eventInstanceGetVolumeMultiplier = timbreEventInstanceGetVolumeMultiplier;
+pub const eventInstanceGetVolumeMultiplier = bpdEventInstanceGetVolumeMultiplier;
 
 // Pauses this instance whenever the tick level drops to the given one or
 // below, and resumes it when the level rises again. Off by default, which
 // means that the event keeps playing regardless of tick level.
-pub const eventInstanceSetAutoPause = timbreEventInstanceSetAutoPause;
+pub const eventInstanceSetAutoPause = bpdEventInstanceSetAutoPause;
 
 // Where the event is and how fast it is moving, in world units and units
 // per second. Ignored by an event that was not authored as 3D.
-pub const eventInstanceSet3DAttributes = timbreEventInstanceSet3DAttributes;
+pub const eventInstanceSet3DAttributes = bpdEventInstanceSet3DAttributes;
 
 // ======================================
 // The C symbols behind the public interface.
 
-extern fn timbreVersion() u32;
+extern fn bpdVersion() u32;
 
-extern fn timbreSetAllocator(allocFn: ?AllocFn, freeFn: ?FreeFn, user: ?*anyopaque) void;
+extern fn bpdSetAllocator(allocFn: ?AllocFn, freeFn: ?FreeFn, user: ?*anyopaque) void;
 
-extern fn timbreSetPrint(printFn: ?PrintFn, user: ?*anyopaque) void;
+extern fn bpdSetPrint(printFn: ?PrintFn, user: ?*anyopaque) void;
 
-extern fn timbreSetAssertHandler(handler: ?AssertFn, user: ?*anyopaque) void;
+extern fn bpdSetAssertHandler(handler: ?AssertFn, user: ?*anyopaque) void;
 
-extern fn timbreHashString(str: [*:0]const u8) u32;
+extern fn bpdHashString(str: [*:0]const u8) u32;
 
-extern fn timbreSoundManagerCreate(environment: RuntimeEnvironment, flags: u32, sampleRate: u32) ?*SoundManager;
+extern fn bpdSoundManagerCreate(environment: RuntimeEnvironment, flags: u32, sampleRate: u32) ?*SoundManager;
 
-extern fn timbreSoundManagerDestroy(soundManager: *SoundManager) void;
+extern fn bpdSoundManagerDestroy(soundManager: *SoundManager) void;
 
-extern fn timbreSoundManagerLoadProject(soundManager: *SoundManager, bytes: ?*const anyopaque, size: usize) c_int;
+extern fn bpdSoundManagerLoadProject(soundManager: *SoundManager, bytes: ?*const anyopaque, size: usize) c_int;
 
-extern fn timbreSoundManagerLoadAdditiveProject(soundManager: *SoundManager, bytes: ?*const anyopaque, size: usize, outID: ?[*]u8, outIDSize: u32) c_int;
+extern fn bpdSoundManagerLoadAdditiveProject(soundManager: *SoundManager, bytes: ?*const anyopaque, size: usize, outID: ?[*]u8, outIDSize: u32) c_int;
 
-extern fn timbreSoundManagerGetEventDescription(soundManager: *SoundManager, path: [*:0]const u8) ?*EventDescription;
+extern fn bpdSoundManagerGetEventDescription(soundManager: *SoundManager, path: [*:0]const u8) ?*EventDescription;
 
-extern fn timbreSoundManagerUpdate(soundManager: *SoundManager) void;
+extern fn bpdSoundManagerUpdate(soundManager: *SoundManager) void;
 
-extern fn timbreSoundManagerMix(soundManager: *SoundManager, interleavedStereo: [*]f32, frameCount: u32) void;
+extern fn bpdSoundManagerMix(soundManager: *SoundManager, interleavedStereo: [*]f32, frameCount: u32) void;
 
-extern fn timbreSoundManagerSetTickLevel(soundManager: *SoundManager, tickLevel: TickLevel) void;
+extern fn bpdSoundManagerSetTickLevel(soundManager: *SoundManager, tickLevel: TickLevel) void;
 
-extern fn timbreSoundManagerSetGlobalVolume(soundManager: *SoundManager, volume: f32) void;
+extern fn bpdSoundManagerSetGlobalVolume(soundManager: *SoundManager, volume: f32) void;
 
-extern fn timbreSoundManagerGetGlobalVolume(soundManager: *SoundManager) f32;
+extern fn bpdSoundManagerGetGlobalVolume(soundManager: *SoundManager) f32;
 
-extern fn timbreSoundManagerSetListenerTransform(soundManager: *SoundManager, positionX: f32, positionY: f32, positionZ: f32, forwardX: f32, forwardY: f32, forwardZ: f32, upX: f32, upY: f32, upZ: f32) void;
+extern fn bpdSoundManagerSetListenerTransform(soundManager: *SoundManager, positionX: f32, positionY: f32, positionZ: f32, forwardX: f32, forwardY: f32, forwardZ: f32, upX: f32, upY: f32, upZ: f32) void;
 
-extern fn timbreSoundManagerGetApproximateVolume(soundManager: *SoundManager, channel: u32) f32;
+extern fn bpdSoundManagerGetApproximateVolume(soundManager: *SoundManager, channel: u32) f32;
 
-extern fn timbreSoundManagerSetJobScheduler(soundManager: *SoundManager, scheduleFn: ?ScheduleJobFn, waitFn: ?WaitForJobsFn, user: ?*anyopaque) void;
+extern fn bpdSoundManagerSetJobScheduler(soundManager: *SoundManager, scheduleFn: ?ScheduleJobFn, waitFn: ?WaitForJobsFn, user: ?*anyopaque) void;
 
-extern fn timbreSoundManagerSetSoundBankCallbacks(soundManager: *SoundManager, getFn: ?GetSoundBankDataFn, releaseFn: ?ReleaseSoundBankDataFn, user: ?*anyopaque) void;
+extern fn bpdSoundManagerSetSoundBankCallbacks(soundManager: *SoundManager, getFn: ?GetSoundBankDataFn, releaseFn: ?ReleaseSoundBankDataFn, user: ?*anyopaque) void;
 
-extern fn timbreSoundManagerPreloadSoundBank(soundManager: *SoundManager, name: [*:0]const u8) c_int;
+extern fn bpdSoundManagerPreloadSoundBank(soundManager: *SoundManager, name: [*:0]const u8) c_int;
 
-extern fn timbreSoundManagerGetBulkAudioAsset(soundManager: *SoundManager, path: [*:0]const u8, outDuration: ?*f32, outAssetID: ?*u32) c_int;
+extern fn bpdSoundManagerGetBulkAudioAsset(soundManager: *SoundManager, path: [*:0]const u8, outDuration: ?*f32, outAssetID: ?*u32) c_int;
 
-extern fn timbreSoundManagerGetBulkAudioAssetByHash(soundManager: *SoundManager, pathHash: u32, outDuration: ?*f32, outAssetID: ?*u32) c_int;
+extern fn bpdSoundManagerGetBulkAudioAssetByHash(soundManager: *SoundManager, pathHash: u32, outDuration: ?*f32, outAssetID: ?*u32) c_int;
 
-extern fn timbreSoundManagerGetBulkAudioAssetCount(soundManager: *SoundManager) u32;
+extern fn bpdSoundManagerGetBulkAudioAssetCount(soundManager: *SoundManager) u32;
 
-extern fn timbreSoundManagerGetBulkAudioAssets(soundManager: *SoundManager, out: [*]BulkAudioAssetInfo, maxCount: u32) u32;
+extern fn bpdSoundManagerGetBulkAudioAssets(soundManager: *SoundManager, out: [*]BulkAudioAssetInfo, maxCount: u32) u32;
 
-extern fn timbreSoundManagerGetDebugStats(soundManager: *SoundManager, out: *DebugStats) void;
+extern fn bpdSoundManagerGetDebugStats(soundManager: *SoundManager, out: *DebugStats) void;
 
-extern fn timbreSoundManagerResetDebugStats(soundManager: *SoundManager) void;
+extern fn bpdSoundManagerResetDebugStats(soundManager: *SoundManager) void;
 
-extern fn timbreSoundManagerGetRecentDecodes(soundManager: *SoundManager, out: [*]DecodeRecord, maxCount: u32) u32;
+extern fn bpdSoundManagerGetRecentDecodes(soundManager: *SoundManager, out: [*]DecodeRecord, maxCount: u32) u32;
 
-extern fn timbreSoundManagerGetInFlightDecodes(soundManager: *SoundManager, out: [*]InFlightDecode, maxCount: u32) u32;
+extern fn bpdSoundManagerGetInFlightDecodes(soundManager: *SoundManager, out: [*]InFlightDecode, maxCount: u32) u32;
 
-extern fn timbreSoundManagerGetListenerDebugInfo(soundManager: *SoundManager, out: *ListenerDebugInfo) void;
+extern fn bpdSoundManagerGetListenerDebugInfo(soundManager: *SoundManager, out: *ListenerDebugInfo) void;
 
-extern fn timbreSoundManagerGet3DDebugInfo(soundManager: *SoundManager, out: [*]DebugInfo3D, maxCount: u32) u32;
+extern fn bpdSoundManagerGet3DDebugInfo(soundManager: *SoundManager, out: [*]DebugInfo3D, maxCount: u32) u32;
 
-extern fn timbreSoundManagerGetMasterGroupBus(soundManager: *SoundManager) *GroupBus;
+extern fn bpdSoundManagerGetMasterGroupBus(soundManager: *SoundManager) *GroupBus;
 
-extern fn timbreSoundManagerGetGroupBus(soundManager: *SoundManager, path: [*:0]const u8) ?*GroupBus;
+extern fn bpdSoundManagerGetGroupBus(soundManager: *SoundManager, path: [*:0]const u8) ?*GroupBus;
 
-extern fn timbreGroupBusGetVolume(groupBus: *const GroupBus) f32;
+extern fn bpdGroupBusGetVolume(groupBus: *const GroupBus) f32;
 
-extern fn timbreGroupBusSetVolume(groupBus: *GroupBus, volume: f32) void;
+extern fn bpdGroupBusSetVolume(groupBus: *GroupBus, volume: f32) void;
 
-extern fn timbreEventDescriptionGetParameterIndex(description: *const EventDescription, name: [*:0]const u8) u32;
+extern fn bpdEventDescriptionGetParameterIndex(description: *const EventDescription, name: [*:0]const u8) u32;
 
-extern fn timbreEventDescriptionGetParameterCount(description: *const EventDescription) u32;
+extern fn bpdEventDescriptionGetParameterCount(description: *const EventDescription) u32;
 
-extern fn timbreEventDescriptionGetParameterType(description: *const EventDescription, index: u32) u32;
+extern fn bpdEventDescriptionGetParameterType(description: *const EventDescription, index: u32) u32;
 
-extern fn timbreEventDescriptionGetLength(description: *const EventDescription) f32;
+extern fn bpdEventDescriptionGetLength(description: *const EventDescription) f32;
 
-extern fn timbreEventDescriptionCreateInstance(description: *EventDescription) ?*EventInstance;
+extern fn bpdEventDescriptionCreateInstance(description: *EventDescription) ?*EventInstance;
 
-extern fn timbreEventInstanceStart(instance: *EventInstance) void;
+extern fn bpdEventInstanceStart(instance: *EventInstance) void;
 
-extern fn timbreEventInstanceStop(instance: *EventInstance) void;
+extern fn bpdEventInstanceStop(instance: *EventInstance) void;
 
-extern fn timbreEventInstancePause(instance: *EventInstance) void;
+extern fn bpdEventInstancePause(instance: *EventInstance) void;
 
-extern fn timbreEventInstanceUnpause(instance: *EventInstance) void;
+extern fn bpdEventInstanceUnpause(instance: *EventInstance) void;
 
-extern fn timbreEventInstanceRelease(instance: *EventInstance) void;
+extern fn bpdEventInstanceRelease(instance: *EventInstance) void;
 
-extern fn timbreEventInstanceReleaseWhenFinished(instance: *EventInstance) void;
+extern fn bpdEventInstanceReleaseWhenFinished(instance: *EventInstance) void;
 
-extern fn timbreEventInstanceFadeIn(instance: *EventInstance, duration: f32) void;
+extern fn bpdEventInstanceFadeIn(instance: *EventInstance, duration: f32) void;
 
-extern fn timbreEventInstanceReleaseAfterFadeOut(instance: *EventInstance, duration: f32) void;
+extern fn bpdEventInstanceReleaseAfterFadeOut(instance: *EventInstance, duration: f32) void;
 
-extern fn timbreEventInstanceGetState(instance: *const EventInstance) EventInstanceState;
+extern fn bpdEventInstanceGetState(instance: *const EventInstance) EventInstanceState;
 
-extern fn timbreEventInstanceGetTime(instance: *const EventInstance) f32;
+extern fn bpdEventInstanceGetTime(instance: *const EventInstance) f32;
 
-extern fn timbreEventInstanceSetParameterByIndex(instance: *EventInstance, index: u32, value: f32) void;
+extern fn bpdEventInstanceSetParameterByIndex(instance: *EventInstance, index: u32, value: f32) void;
 
-extern fn timbreEventInstanceSetParameterByName(instance: *EventInstance, name: [*:0]const u8, value: f32) void;
+extern fn bpdEventInstanceSetParameterByName(instance: *EventInstance, name: [*:0]const u8, value: f32) void;
 
-extern fn timbreEventInstanceGetParameterByIndex(instance: *const EventInstance, index: u32) f32;
+extern fn bpdEventInstanceGetParameterByIndex(instance: *const EventInstance, index: u32) f32;
 
-extern fn timbreEventInstanceSendSignal(instance: *EventInstance, signal: [*:0]const u8) void;
+extern fn bpdEventInstanceSendSignal(instance: *EventInstance, signal: [*:0]const u8) void;
 
-extern fn timbreEventInstanceSetVolumeMultiplier(instance: *EventInstance, volume: f32) void;
+extern fn bpdEventInstanceSetVolumeMultiplier(instance: *EventInstance, volume: f32) void;
 
-extern fn timbreEventInstanceGetVolumeMultiplier(instance: *const EventInstance) f32;
+extern fn bpdEventInstanceGetVolumeMultiplier(instance: *const EventInstance) f32;
 
-extern fn timbreEventInstanceSetAutoPause(instance: *EventInstance, enabled: c_int, level: TickLevel) void;
+extern fn bpdEventInstanceSetAutoPause(instance: *EventInstance, enabled: c_int, level: TickLevel) void;
 
-extern fn timbreEventInstanceSet3DAttributes(instance: *EventInstance, positionX: f32, positionY: f32, positionZ: f32, velocityX: f32, velocityY: f32, velocityZ: f32) void;
+extern fn bpdEventInstanceSet3DAttributes(instance: *EventInstance, positionX: f32, positionY: f32, positionZ: f32, velocityX: f32, velocityY: f32, velocityZ: f32) void;

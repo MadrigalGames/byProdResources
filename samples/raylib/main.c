@@ -2,12 +2,12 @@
 // stop buttons and two sliders adjusting event parameters. Builds for the
 // web with Emscripten, and on the desktop as an ordinary raylib app.
 
-// The sound manager runs in host mixed mode: Timbre opens no audio device
+// The sound manager runs in host mixed mode: byProd opens no audio device
 // and runs no threads. raylib owns the speakers, and every frame the mixed
-// audio is pulled out of Timbre and pushed into a raylib AudioStream.
+// audio is pulled out of byProd and pushed into a raylib AudioStream.
 
-// Include the Timbre header. The entire runtime API is found here.
-#include <timbre/timbre.h>
+// Include the byProd header. The entire runtime API is found here.
+#include <byprod/byprod.h>
 
 #include "raylib.h"
 
@@ -21,7 +21,7 @@
     #include <emscripten/emscripten.h>
 #endif
 
-#define PROJECT_FILE "sample_project.timbre"
+#define PROJECT_FILE "sample_project.byprod"
 
 // The path to the event we want to play, and the names of the two float
 // parameters the sliders drive.
@@ -32,16 +32,16 @@
 // The rate the sound manager mixes at, which is also the rate the raylib stream plays at.
 #define SAMPLE_RATE 44100u
 
-// Frames pulled per timbreSoundManagerMix() call, and the size of each of
+// Frames pulled per bpdSoundManagerMix() call, and the size of each of
 // the stream's two buffers.
 #define MIX_CHUNK_FRAMES 2048u
 
 // Everything lives in globals because the browser main loop is a plain
 // callback (see emscripten_set_main_loop below).
-static TimbreSoundManager* soundManager;
-static TimbreEventInstance* instance;
-static uint32_t speedParam = TIMBRE_INVALID_PARAMETER_INDEX;
-static uint32_t cutoffParam = TIMBRE_INVALID_PARAMETER_INDEX;
+static BpdSoundManager* soundManager;
+static BpdEventInstance* instance;
+static uint32_t speedParam = BPD_INVALID_PARAMETER_INDEX;
+static uint32_t cutoffParam = BPD_INVALID_PARAMETER_INDEX;
 
 static AudioStream stream;
 static float mixBuffer[MIX_CHUNK_FRAMES * 2];
@@ -91,36 +91,36 @@ static void* readWholeFile(const char* path, size_t* outSize)
 }
 
 // This function is installed as the print hook for the runtime. Whenever
-// the Timbre runtime prints something, it uses this function to do it. In
+// the byProd runtime prints something, it uses this function to do it. In
 // the browser the output lands in the developer console.
-static void printHook(const char* message, TimbrePrintType type, void* user)
+static void printHook(const char* message, BpdPrintType type, void* user)
 {
     (void)user;
 
     const char* prefix = "info";
 
-    if (type == TIMBRE_PRINT_WARNING)
+    if (type == BPD_PRINT_WARNING)
     {
         prefix = "warning";
     }
-    else if (type == TIMBRE_PRINT_ERROR)
+    else if (type == BPD_PRINT_ERROR)
     {
         prefix = "error";
     }
 
-    printf("[timbre %s] %s\n", prefix, message);
+    printf("[byprod %s] %s\n", prefix, message);
 }
 
-// This function gets called by the Timbre runtime when it wants to read a
+// This function gets called by the byProd runtime when it wants to read a
 // sound bank. We read the whole file into memory and keep it loaded for
-// as long as Timbre needs it. Thus, we tell Timbre not to create an
+// as long as byProd needs it. Thus, we tell byProd not to create an
 // internal copy (copyData = 0).
-static int getSoundBankData(const char* name, TimbreSoundBankData* out, void* user)
+static int getSoundBankData(const char* name, BpdSoundBankData* out, void* user)
 {
     (void)user;
 
     char path[1024];
-    snprintf(path, sizeof(path), "%s.timbrebank", name);
+    snprintf(path, sizeof(path), "%s.bybank", name);
 
     size_t size = 0;
     void* bytes = readWholeFile(path, &size);
@@ -137,9 +137,9 @@ static int getSoundBankData(const char* name, TimbreSoundBankData* out, void* us
     return 1;
 }
 
-// This is called when Timbre no longer needs the data for a given sound bank.
+// This is called when byProd no longer needs the data for a given sound bank.
 // We simply free the data allocated in getSoundBankData() above.
-static void releaseSoundBankData(const char* name, const TimbreSoundBankData* data, void* user)
+static void releaseSoundBankData(const char* name, const BpdSoundBankData* data, void* user)
 {
     (void)name;
     (void)user;
@@ -147,20 +147,20 @@ static void releaseSoundBankData(const char* name, const TimbreSoundBankData* da
     free((void*)data->bytes);
 }
 
-static const char* stateName(TimbreEventInstanceState state)
+static const char* stateName(BpdEventInstanceState state)
 {
     switch (state)
     {
-        case TIMBRE_EVENT_STOPPED:  return "stopped";
-        case TIMBRE_EVENT_PLAYING:  return "playing";
-        case TIMBRE_EVENT_PAUSED:   return "paused";
-        case TIMBRE_EVENT_FINISHED: return "finished";
+        case BPD_EVENT_STOPPED:  return "stopped";
+        case BPD_EVENT_PLAYING:  return "playing";
+        case BPD_EVENT_PAUSED:   return "paused";
+        case BPD_EVENT_FINISHED: return "finished";
         default:                    return "?";
     }
 }
 
 // Feeds the raylib stream. Whenever the stream has room for another
-// buffer, one chunk of mixed audio is pulled out of Timbre and pushed
+// buffer, one chunk of mixed audio is pulled out of byProd and pushed
 // in. Browsers keep audio suspended until the user first interacts with
 // the page, so until that click the stream consumes nothing and this
 // function has nothing to do.
@@ -168,7 +168,7 @@ static void pumpAudio(void)
 {
     while (IsAudioStreamProcessed(stream))
     {
-        timbreSoundManagerMix(soundManager, mixBuffer, MIX_CHUNK_FRAMES);
+        bpdSoundManagerMix(soundManager, mixBuffer, MIX_CHUNK_FRAMES);
         UpdateAudioStream(stream, mixBuffer, MIX_CHUNK_FRAMES);
     }
 }
@@ -178,7 +178,7 @@ static void frame(void)
 {
     // Update the sound manager once per frame. In host mixed mode it times
     // itself by the frames mixed below.
-    timbreSoundManagerUpdate(soundManager);
+    bpdSoundManagerUpdate(soundManager);
 
     pumpAudio();
 
@@ -186,67 +186,67 @@ static void frame(void)
     ClearBackground(RAYWHITE);
 
     GuiLabel((Rectangle){ 20, 12, 560, 24 },
-        "Timbre raylib sample: " EVENT_PATH);
+        "byProd raylib sample: " EVENT_PATH);
 
     if (GuiButton((Rectangle){ 20, 52, 120, 32 }, "Play"))
     {
-        timbreEventInstanceStart(instance);
+        bpdEventInstanceStart(instance);
     }
 
     if (GuiButton((Rectangle){ 156, 52, 120, 32 }, "Stop"))
     {
-        timbreEventInstanceStop(instance);
+        bpdEventInstanceStop(instance);
     }
 
     GuiLabel((Rectangle){ 300, 52, 260, 32 },
-        TextFormat("State: %s", stateName(timbreEventInstanceGetState(instance))));
+        TextFormat("State: %s", stateName(bpdEventInstanceGetState(instance))));
 
     GuiSlider((Rectangle){ 90, 120, 380, 24 },
         SPEED_PARAM, TextFormat("%.2f x", (double)speed),
         &speed, 0.25f, 4.0f);
 
-    timbreEventInstanceSetParameterByIndex(instance, speedParam, speed);
+    bpdEventInstanceSetParameterByIndex(instance, speedParam, speed);
 
     GuiSlider((Rectangle){ 90, 160, 380, 24 },
         CUTOFF_PARAM, TextFormat("%.0f Hz", (double)cutoff),
         &cutoff, 500.0f, 10000.0f);
 
-    timbreEventInstanceSetParameterByIndex(instance, cutoffParam, cutoff);
+    bpdEventInstanceSetParameterByIndex(instance, cutoffParam, cutoff);
 
     EndDrawing();
 }
 
 int main(void)
 {
-    // You should always check the Timbre version reported by the library
+    // You should always check the byProd version reported by the library
     // and make sure it matches the version your app was built against.
-    if (timbreVersion() != TIMBRE_VERSION)
+    if (bpdVersion() != BPD_VERSION)
     {
         fprintf(stderr, "Library version 0x%08x does not match header version 0x%08x.\n",
-            timbreVersion(), TIMBRE_VERSION);
+            bpdVersion(), BPD_VERSION);
         return 1;
     }
 
     // Install the print hook. The second parameter is anything you want the
     // user parameter to hold.
-    timbreSetPrint(printHook, NULL);
+    bpdSetPrint(printHook, NULL);
 
-    // Create the Timbre sound manager, here in host mixed mode: no audio
-    // device, no threads, audio only moves when timbreSoundManagerMix() is
+    // Create the byProd sound manager, here in host mixed mode: no audio
+    // device, no threads, audio only moves when bpdSoundManagerMix() is
     // called. The sample rate is the mixing rate and must be real in this
     // mode.
-    soundManager = timbreSoundManagerCreate(
-        TIMBRE_RUNTIME_APP, TIMBRE_SOUND_MANAGER_HOST_MIXED, SAMPLE_RATE);
+    soundManager = bpdSoundManagerCreate(
+        BPD_RUNTIME_APP, BPD_SOUND_MANAGER_HOST_MIXED, SAMPLE_RATE);
 
     if (soundManager == NULL)
     {
-        fprintf(stderr, "timbreSoundManagerCreate failed.\n");
+        fprintf(stderr, "bpdSoundManagerCreate failed.\n");
         return 1;
     }
 
-    // Install the sound bank callbacks, so Timbre knows what to call when
+    // Install the sound bank callbacks, so byProd knows what to call when
     // it wants to load/unload a sound bank.
-    timbreSoundManagerSetSoundBankCallbacks(
+    bpdSoundManagerSetSoundBankCallbacks(
         soundManager, getSoundBankData, releaseSoundBankData, NULL);
 
     size_t projectSize = 0;
@@ -260,7 +260,7 @@ int main(void)
 
     // Load the project into memory. The bytes are always copied during
     // load, so we can free the data immediately afterwards.
-    int loaded = timbreSoundManagerLoadProject(soundManager, projectBytes, projectSize);
+    int loaded = bpdSoundManagerLoadProject(soundManager, projectBytes, projectSize);
     free(projectBytes);
 
     if (!loaded)
@@ -272,8 +272,8 @@ int main(void)
     // Get a pointer to the event description for our sample event. Event
     // descriptions are created when the project loads and stay alive until
     // the project is unloaded.
-    TimbreEventDescription* description =
-        timbreSoundManagerGetEventDescription(soundManager, EVENT_PATH);
+    BpdEventDescription* description =
+        bpdSoundManagerGetEventDescription(soundManager, EVENT_PATH);
 
     if (description == NULL)
     {
@@ -283,7 +283,7 @@ int main(void)
 
     // Create one instance of the event. Instances need to be manually
     // released later.
-    instance = timbreEventDescriptionCreateInstance(description);
+    instance = bpdEventDescriptionCreateInstance(description);
 
     if (instance == NULL)
     {
@@ -294,18 +294,18 @@ int main(void)
     // Parameter indices can be queried up-front, using the parameter name.
     // This way we can use the index to set the parameter later, which is
     // faster than setting it by name.
-    speedParam = timbreEventDescriptionGetParameterIndex(description, SPEED_PARAM);
-    cutoffParam = timbreEventDescriptionGetParameterIndex(description, CUTOFF_PARAM);
+    speedParam = bpdEventDescriptionGetParameterIndex(description, SPEED_PARAM);
+    cutoffParam = bpdEventDescriptionGetParameterIndex(description, CUTOFF_PARAM);
 
-    if (speedParam == TIMBRE_INVALID_PARAMETER_INDEX
-        || cutoffParam == TIMBRE_INVALID_PARAMETER_INDEX)
+    if (speedParam == BPD_INVALID_PARAMETER_INDEX
+        || cutoffParam == BPD_INVALID_PARAMETER_INDEX)
     {
         fprintf(stderr, "The event is missing the \"%s\" or \"%s\" parameter.\n",
             SPEED_PARAM, CUTOFF_PARAM);
         return 1;
     }
 
-    InitWindow(600, 340, "Timbre raylib sample");
+    InitWindow(600, 340, "byProd raylib sample");
     InitAudioDevice();
 
     // Each of the stream's two buffers holds exactly one mix chunk.
@@ -336,8 +336,8 @@ int main(void)
     CloseAudioDevice();
     CloseWindow();
 
-    timbreEventInstanceRelease(instance);
-    timbreSoundManagerDestroy(soundManager);
+    bpdEventInstanceRelease(instance);
+    bpdSoundManagerDestroy(soundManager);
 
     return 0;
 }
