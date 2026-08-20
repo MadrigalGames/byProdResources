@@ -45,7 +45,7 @@ VERSION_PATCH :: 0
 
 VERSION: u32 : (VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | VERSION_PATCH
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	// Returns the version the library was built as. Compare against VERSION
 	// from the bindings you compiled against before using anything else.
@@ -78,7 +78,7 @@ ScheduleJobFn :: proc "c" (jobFn: JobFn, jobData: rawptr, user: rawptr)
 // A function which waits until every scheduled job has run.
 WaitForJobsFn :: proc "c" (user: rawptr)
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	// Replaces the allocator, which has to happen before anything else is
 	// called. The callbacks must be thread safe since the audio mixer thread
@@ -142,7 +142,7 @@ TYPE_AUDIO_FILTER :: 303
 // ======================================
 // String hashing.
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	// MurmurHash3, x86 32 bit variant, seeded zero, over the bytes of the
 	// string without its trailing null. The x86 and x64 variants of
@@ -170,7 +170,7 @@ SOUND_MANAGER_RIGHT_HANDED_3D :: 0x1
 // creation.
 SOUND_MANAGER_HOST_MIXED :: 0x2
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	// The sample rate is the mixing rate in Hz. If you are creating the
 	// sound manager with the SOUND_MANAGER_HOST_MIXED flag you should pass a
@@ -268,7 +268,7 @@ GetSoundBankDataFn :: proc "c" (name: cstring, out: ^SoundBankData, user: rawptr
 // straight after it has copied one it was told not to keep.
 ReleaseSoundBankDataFn :: proc "c" (name: cstring, data: ^SoundBankData, user: rawptr)
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	SoundManagerSetSoundBankCallbacks :: proc(soundManager: ^SoundManager, getFn: GetSoundBankDataFn, releaseFn: ReleaseSoundBankDataFn, user: rawptr) ---
 
@@ -296,7 +296,7 @@ BulkAudioAssetInfo :: struct {
 	duration: f32,
 }
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	// Fills whichever of the two outputs are given and returns nonzero. Zero
 	// means the project declares no such entry.
@@ -392,7 +392,7 @@ DebugInfo3D :: struct {
 	dopplerRatio: f32,
 }
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	SoundManagerGetDebugStats :: proc(soundManager: ^SoundManager, out: ^DebugStats) ---
 
@@ -417,7 +417,7 @@ foreign lib {
 
 GroupBus :: struct {}
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	// Master bus, always present, and the default.
 	// Its volume is the same one SoundManagerSetGlobalVolume sets.
@@ -436,7 +436,7 @@ foreign lib {
 
 INVALID_PARAMETER_INDEX :: 0xFFFFFFFF
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	EventDescriptionGetParameterIndex :: proc(description: ^EventDescription, name: cstring) -> u32 ---
 	EventDescriptionGetParameterCount :: proc(description: ^EventDescription) -> u32 ---
@@ -464,7 +464,7 @@ EventInstanceState :: enum i32 {
 	FINISHED = 3,
 }
 
-@(default_calling_convention="c", link_prefix="byprod")
+@(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
 	EventInstanceStart   :: proc(instance: ^EventInstance) ---
 	EventInstanceStop    :: proc(instance: ^EventInstance) ---
