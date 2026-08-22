@@ -115,11 +115,13 @@ pub fn main(init: std.process.Init) !void {
 
     // Create the byProd sound manager. This is the main "object" of the byProd
     // runtime in a game, and needs to outlive any other resources created/loaded
-    // by the runtime. Always pass .app as the environment parameter. The second
-    // parameter is a bitwise combination of SOUND_MANAGER_* flags, zero for
-    // the defaults. The third is the mixing sample rate in Hz, where zero
-    // lets the audio device decide.
-    const soundManager = byprod.soundManagerCreate(.app, 0, 0) orelse {
+    // by the runtime. The settings start from byProd's defaults via the init
+    // call (the app environment, no flags, the device's own sample rate);
+    // adjust members before create when they are not what you want.
+    var settings: byprod.SoundManagerSettings = undefined;
+    byprod.soundManagerSettingsInit(&settings);
+
+    const soundManager = byprod.soundManagerCreate(&settings) orelse {
         std.debug.print("soundManagerCreate failed.\n", .{});
         return error.CreateFailed;
     };

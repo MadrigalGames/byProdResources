@@ -41,7 +41,7 @@ when ODIN_OS == .Windows {
 
 VERSION_MAJOR :: 0
 VERSION_MINOR :: 5
-VERSION_PATCH :: 0
+VERSION_PATCH :: 2
 
 VERSION: u32 : (VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | VERSION_PATCH
 
@@ -170,13 +170,45 @@ SOUND_MANAGER_RIGHT_HANDED_3D :: 0x1
 // creation.
 SOUND_MANAGER_HOST_MIXED :: 0x2
 
+// Everything a sound manager is created with. Fill it with
+// SoundManagerSettingsInit() first, then adjust what you need.
+SoundManagerSettings :: struct {
+	environment: RuntimeEnvironment,
+
+	// Combination of the SOUND_MANAGER_* flags above.
+	flags: u32,
+
+	// The mixing rate in Hz. Zero lets the audio device decide, which is
+	// the default. SOUND_MANAGER_HOST_MIXED has no device to ask, so it
+	// needs a real rate here.
+	sampleRate: u32,
+
+	// Scales the whole mix once, on top of everything else. This is a
+	// fixed compensation set at creation, not the global volume which can
+	// be adjusted later. Certain SoLoud backends pull the mix down a
+	// little, and this compensates for that.
+	globalVolumeMultiplier: f32,
+
+	// SoLoud's scaler for the mix after clipping.
+	postClipScaler: f32,
+
+	// How many voices can be audible at once. Voices beyond this still
+	// advance, they just can't be heard.
+	maxActiveVoiceCount: u32,
+}
+
 @(default_calling_convention="c", link_prefix="bpd")
 foreign lib {
-	// The sample rate is the mixing rate in Hz. If you are creating the
-	// sound manager with the SOUND_MANAGER_HOST_MIXED flag you should pass a
-	// sample rate, otherwise leave it at 0 which makes the audio device
-	// decide.
-	SoundManagerCreate :: proc(environment: RuntimeEnvironment, flags: u32, sampleRate: u32) -> ^SoundManager ---
+	// Fills the settings with the defaults. It's recommended to always
+	// init the settings with this even if you override parameters before
+	// creating the sound manager. That way new parameters can be added in
+	// later versions and have reasonable default values.
+	SoundManagerSettingsInit :: proc(settings: ^SoundManagerSettings) ---
+
+	// Creates the sound manager with the given settings. Returns null and
+	// prints an error if creation fails. The settings struct is copied and
+	// doesn't need to be held onto.
+	SoundManagerCreate :: proc(settings: ^SoundManagerSettings) -> ^SoundManager ---
 
 	SoundManagerDestroy :: proc(soundManager: ^SoundManager) ---
 
@@ -230,13 +262,6 @@ foreign lib {
 	// Where the listener is and which way it faces, in world units. Forward
 	// and up are the transform's Z and Y axes. Default: identity.
 	SoundManagerSetListenerTransform :: proc(soundManager: ^SoundManager, positionX: f32, positionY: f32, positionZ: f32, forwardX: f32, forwardY: f32, forwardZ: f32, upX: f32, upY: f32, upZ: f32) ---
-
-	// Roughly how loud one output channel is right now, for a meter. Only
-	// meaningful on a sound manager created as
-	// RuntimeEnvironment.PREVIEW_IN_EDITOR, which is the only one that
-	// measures it, since it costs mixing work a game should not pay for.
-	// Zero otherwise.
-	SoundManagerGetApproximateVolume :: proc(soundManager: ^SoundManager, channel: u32) -> f32 ---
 
 	// Used to hook wave decoding jobs into the job system of a game engine,
 	// or some other multithreading solution. Default: null, which means that

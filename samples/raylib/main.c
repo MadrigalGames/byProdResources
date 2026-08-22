@@ -234,9 +234,15 @@ int main(void)
     // Create the byProd sound manager, here in host mixed mode: no audio
     // device, no threads, audio only moves when bpdSoundManagerMix() is
     // called. The sample rate is the mixing rate and must be real in this
-    // mode.
-    soundManager = bpdSoundManagerCreate(
-        BPD_RUNTIME_APP, BPD_SOUND_MANAGER_HOST_MIXED, SAMPLE_RATE);
+    // mode. The settings start from byProd's defaults and only what
+    // differs is set.
+    BpdSoundManagerSettings settings;
+    bpdSoundManagerSettingsInit(&settings);
+
+    settings.flags = BPD_SOUND_MANAGER_HOST_MIXED;
+    settings.sampleRate = SAMPLE_RATE;
+
+    soundManager = bpdSoundManagerCreate(&settings);
 
     if (soundManager == NULL)
     {

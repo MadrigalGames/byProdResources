@@ -25,7 +25,7 @@
 
 pub const VERSION_MAJOR = 0;
 pub const VERSION_MINOR = 5;
-pub const VERSION_PATCH = 0;
+pub const VERSION_PATCH = 2;
 
 pub fn makeVersion(major: u32, minor: u32, patch: u32) u32 {
     return (major << 16) | (minor << 8) | patch;
@@ -150,9 +150,38 @@ pub const SOUND_MANAGER_RIGHT_HANDED_3D: u32 = 0x1;
 // their audio pipeline, eg. web games. Requires a real sample rate at creation.
 pub const SOUND_MANAGER_HOST_MIXED: u32 = 0x2;
 
-// The sample rate is the mixing rate in Hz. If you are creating the sound
-// manager with the SOUND_MANAGER_HOST_MIXED flag you should pass a sample
-// rate, otherwise leave it at 0 which makes the audio device decide.
+// Everything a sound manager is created with. Fill it with
+// soundManagerSettingsInit() first, then adjust what you need.
+pub const SoundManagerSettings = extern struct {
+    environment: RuntimeEnvironment,
+
+    // Combination of the SOUND_MANAGER_* flags above.
+    flags: u32,
+
+    // The mixing rate in Hz. Zero lets the audio device decide, which is the default.
+    // SOUND_MANAGER_HOST_MIXED has no device to ask, so it needs a real rate here.
+    sampleRate: u32,
+
+    // Scales the whole mix once, on top of everything else. This is a fixed compensation
+    // set at creation, not the global volume which can be adjusted later. Certain SoLoud
+    // backends pull the mix down a little, and this compensates for that.
+    globalVolumeMultiplier: f32,
+
+    // SoLoud's scaler for the mix after clipping.
+    postClipScaler: f32,
+
+    // How many voices can be audible at once. Voices beyond this still advance,
+    // they just can't be heard.
+    maxActiveVoiceCount: u32,
+};
+
+// Fills the settings with the defaults. It's recommended to always init the settings
+// with this even if you override parameters before creating the sound manager. That way
+// new parameters can be added in later versions and have reasonable default values.
+pub const soundManagerSettingsInit = bpdSoundManagerSettingsInit;
+
+// Creates the sound manager with the given settings. Returns null and prints an error
+// if creation fails. The settings struct is copied and doesn't need to be held onto.
 pub const soundManagerCreate = bpdSoundManagerCreate;
 
 pub const soundManagerDestroy = bpdSoundManagerDestroy;
@@ -203,12 +232,6 @@ pub const soundManagerGetGlobalVolume = bpdSoundManagerGetGlobalVolume;
 // Where the listener is and which way it faces, in world units. Forward and
 // up are the transform's Z and Y axes. Default: identity.
 pub const soundManagerSetListenerTransform = bpdSoundManagerSetListenerTransform;
-
-// Roughly how loud one output channel is right now, for a meter. Only
-// meaningful on a sound manager created as RuntimeEnvironment.preview_in_editor,
-// which is the only one that measures it, since it costs mixing work a game
-// should not pay for. Zero otherwise.
-pub const soundManagerGetApproximateVolume = bpdSoundManagerGetApproximateVolume;
 
 // Used to hook wave decoding jobs into the job system of a game engine, or
 // some other multithreading solution. Default: null, which means that the
@@ -494,7 +517,9 @@ extern fn bpdSetAssertHandler(handler: ?AssertFn, user: ?*anyopaque) void;
 
 extern fn bpdHashString(str: [*:0]const u8) u32;
 
-extern fn bpdSoundManagerCreate(environment: RuntimeEnvironment, flags: u32, sampleRate: u32) ?*SoundManager;
+extern fn bpdSoundManagerSettingsInit(settings: *SoundManagerSettings) void;
+
+extern fn bpdSoundManagerCreate(settings: *const SoundManagerSettings) ?*SoundManager;
 
 extern fn bpdSoundManagerDestroy(soundManager: *SoundManager) void;
 
@@ -515,8 +540,6 @@ extern fn bpdSoundManagerSetGlobalVolume(soundManager: *SoundManager, volume: f3
 extern fn bpdSoundManagerGetGlobalVolume(soundManager: *SoundManager) f32;
 
 extern fn bpdSoundManagerSetListenerTransform(soundManager: *SoundManager, positionX: f32, positionY: f32, positionZ: f32, forwardX: f32, forwardY: f32, forwardZ: f32, upX: f32, upY: f32, upZ: f32) void;
-
-extern fn bpdSoundManagerGetApproximateVolume(soundManager: *SoundManager, channel: u32) f32;
 
 extern fn bpdSoundManagerSetJobScheduler(soundManager: *SoundManager, scheduleFn: ?ScheduleJobFn, waitFn: ?WaitForJobsFn, user: ?*anyopaque) void;
 
