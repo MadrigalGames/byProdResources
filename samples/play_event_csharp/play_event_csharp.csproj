@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Builds the C# sample against the bindings in this repository and a
+    byProd SDK. The native library is copied beside the executable from
+    the SDK's bin folder (see README.md for the command line).
+    Alternatively, copy byProd.dll/libbyProd.so next to the exe yourself.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>PlayEvent</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\bindings\csharp\*.cs" Link="ByProd\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(ByProdSdk)' != '' And Exists('$(ByProdSdk)\bin\byProd.dll')">
+    <None Include="$(ByProdSdk)\bin\byProd.dll" Link="byProd.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(ByProdSdk)' != '' And Exists('$(ByProdSdk)/bin/libbyProd.so')">
+    <None Include="$(ByProdSdk)/bin/libbyProd.so" Link="libbyProd.so" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

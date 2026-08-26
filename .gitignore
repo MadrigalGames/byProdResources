@@ -3,6 +3,8 @@ build/
 zig-out/
 .zig-cache/
 zig-cache/
+[Bb]in/
+[Oo]bj/
 
 # OS cruft
 Thumbs.db
