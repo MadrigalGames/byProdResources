@@ -127,7 +127,7 @@ namespace ByProd
     {
         public const uint VersionMajor = 0;
         public const uint VersionMinor = 5;
-        public const uint VersionPatch = 2;
+        public const uint VersionPatch = 3;
 
         public const uint Version = (VersionMajor << 16) | (VersionMinor << 8) | VersionPatch;
 
@@ -193,6 +193,9 @@ namespace ByProd
             return Encoding.UTF8.GetString(buffer, 0, length < 0 ? buffer.Length : length);
         }
 
+#if UNITY_5_3_OR_NEWER
+        [AOT.MonoPInvokeCallback(typeof(Native.PrintFn))]
+#endif
         private static void OnPrint(IntPtr message, PrintType type, IntPtr user)
         {
             try
@@ -204,6 +207,9 @@ namespace ByProd
             }
         }
 
+#if UNITY_5_3_OR_NEWER
+        [AOT.MonoPInvokeCallback(typeof(Native.AssertFn))]
+#endif
         private static void OnAssert(IntPtr message, IntPtr file, int line, IntPtr user)
         {
             try
@@ -668,6 +674,9 @@ namespace ByProd
             }
         }
 
+#if UNITY_5_3_OR_NEWER
+        [AOT.MonoPInvokeCallback(typeof(Native.GetSoundBankDataFn))]
+#endif
         private static int OnGetSoundBank(IntPtr name, ref Native.SoundBankData data, IntPtr user)
         {
             try
@@ -693,6 +702,9 @@ namespace ByProd
             }
         }
 
+#if UNITY_5_3_OR_NEWER
+        [AOT.MonoPInvokeCallback(typeof(Native.ReleaseSoundBankDataFn))]
+#endif
         private static void OnReleaseSoundBank(IntPtr name, ref Native.SoundBankData data, IntPtr user)
         {
             try
@@ -705,6 +717,9 @@ namespace ByProd
             }
         }
 
+#if UNITY_5_3_OR_NEWER
+        [AOT.MonoPInvokeCallback(typeof(Native.ScheduleJobFn))]
+#endif
         private static void OnScheduleJob(IntPtr jobFn, IntPtr jobData, IntPtr user)
         {
             try
@@ -727,6 +742,9 @@ namespace ByProd
             }
         }
 
+#if UNITY_5_3_OR_NEWER
+        [AOT.MonoPInvokeCallback(typeof(Native.WaitForJobsFn))]
+#endif
         private static void OnWaitForJobs(IntPtr user)
         {
             try
