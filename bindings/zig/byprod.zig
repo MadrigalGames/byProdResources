@@ -25,7 +25,7 @@
 
 pub const VERSION_MAJOR = 0;
 pub const VERSION_MINOR = 5;
-pub const VERSION_PATCH = 3;
+pub const VERSION_PATCH = 4;
 
 pub fn makeVersion(major: u32, minor: u32, patch: u32) u32 {
     return (major << 16) | (minor << 8) | patch;
