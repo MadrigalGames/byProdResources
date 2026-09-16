@@ -127,7 +127,7 @@ namespace ByProd
     {
         public const uint VersionMajor = 0;
         public const uint VersionMinor = 5;
-        public const uint VersionPatch = 4;
+        public const uint VersionPatch = 5;
 
         public const uint Version = (VersionMajor << 16) | (VersionMinor << 8) | VersionPatch;
 
